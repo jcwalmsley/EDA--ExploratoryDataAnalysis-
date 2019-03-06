@@ -1,0 +1,1729 @@
+---
+title: "Exploratory Data Analysis by: James C Walmsley"
+output: 
+  html_document:
+    #code_folding: "hide"
+    fig_caption: yes
+    fig_width: 10
+    number_sections: no
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+======================================================================================
+
+#### Udacity - Data Analyst ND Term-2 Project-2, Feb & Mar 2019
+
+#### Purpose: Produce a simple linear model to predict the likelyhood of a\
+potential loan by the Prosper Loan Company becoming delinquent.
+
+```{r,setup,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,results='hide'}
+# set local working directory
+setwd("~/Desktop/Udacity/Nanodegrees/Data_Analyst/Projects/Explore_Summarize_Data")
+#date()
+#getwd()
+#
+```
+
+***
+
+**Notes from: 9/03/05/15:00**
+
+- √ add comments before and after tables and plots bivariate section and below
+- add figure captions per https://holtzy.github.io/Pimp-my-rmd/space_before_title
+- add color and verticle line to indicate locations of means and std's
+
+*For Final Plots and time permitting those above*
+
+- √ select appropriate bin width where applicable
+- √ rotate x axis tick lables vertically 90 degrees
+- add figure captions per https://holtzy.github.io/Pimp-my-rmd/space_before_title
+- √ scale x and or y axis if appropriate
+- add figure titles and axis lables
+- add color and verticle line to indicate locations of means and std's
+
+***
+
+
+```{r,date_1,echo=FALSE,message=FALSE,warning=FALSE}
+date()
+```
+
+Install packages & libraries.
+
+```{r,load_pkgs_lib,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,results='hide'}
+# Load packages
+install.packages("tidyr", repos = 'http://cran.us.r-project.org')
+install.packages("readr", repos = 'http://cran.us.r-project.org')
+install.packages("readxl", repos = 'http://cran.us.r-project.org')
+install.packages("magrittr", repos = 'http://cran.us.r-project.org')
+install.packages("stringr", repos = 'http://cran.us.r-project.org')
+install.packages("data.table", repos = 'http://cran.us.r-project.org')
+install.packages("plyr", repos = 'http://cran.us.r-project.org')
+install.packages("dplyr", repos = 'http://cran.us.r-project.org')
+install.packages("dygraphs", repos = 'http://cran.us.r-project.org')
+install.packages("broom", repos = 'http://cran.us.r-project.org')
+install.packages("tibble", repos = 'http://cran.us.r-project.org')
+install.packages("forcats", repos = 'http://cran.us.r-project.org')
+install.packages("hms", repos = 'http://cran.us.r-project.org')
+install.packages("testthat", repos = 'http://cran.us.r-project.org')
+install.packages("ggplot2", repos = 'http://cran.us.r-project.org')
+install.packages("ggthemes", repos = 'http://cran.us.r-project.org')
+install.packages("GGally", repos = 'http://cran.us.r-project.org')
+install.packages("ggpubr", repos = 'http://cran.us.r-project.org')
+install.packages("gridExtra", repos = 'http://cran.us.r-project.org')
+install.packages("scales", repos = 'http://cran.us.r-project.org')
+install.packages("memisc", repos = 'http://cran.us.r-project.org')
+install.packages("lattice", repos = 'http://cran.us.r-project.org')
+install.packages("lubridate", repos = 'http://cran.us.r-project.org')
+install.packages("leaflet", repos = 'http://cran.us.r-project.org')
+install.packages("MASS", repos = 'http://cran.us.r-project.org')
+install.packages("plotly", repos = 'http://cran.us.r-project.org')
+install.packages("car", repos = 'http://cran.us.r-project.org')
+install.packages("purrr", repos = 'http://cran.us.r-project.org')
+install.packages("quantmod", repos = 'http://cran.us.r-project.org')
+install.packages("reshape", repos = 'http://cran.us.r-project.org')
+install.packages("reshape2", repos = 'http://cran.us.r-project.org')
+install.packages("RColorBrewer", repos = 'http://cran.us.r-project.org')
+install.packages("colorspace", repos = 'http://cran.us.r-project.org')
+install.packages("sessioninfo", repos = 'http://cran.us.r-project.org')
+install.packages("stringr", repos = 'http://cran.us.r-project.org')
+install.packages("xtable", repos = 'http://cran.us.r-project.org')
+install.packages("xts", repos = 'http://cran.us.r-project.org')
+install.packages("zoo", repos = 'http://cran.us.r-project.org')
+#
+# load libraries
+library(tidyr)
+library(readr)
+library(readxl)
+library(magrittr)
+library(stringr)
+library(plyr)
+library(dplyr)
+library(dygraphs)
+library(data.table)
+library(broom)
+library(tibble)
+library(forcats)
+library(hms)
+library(testthat)
+library(ggplot2)
+library(ggthemes)
+library(GGally)
+library(ggpubr)
+library(gridExtra)
+library(scales)
+library(memisc)
+library(lattice)
+library(lubridate)
+library(leaflet)
+library(MASS)
+library(plotly)
+library(car)
+library(purrr)
+library(quantmod)
+library(reshape)
+library(reshape2)
+library(RColorBrewer)
+library(colorspace)
+library(sessioninfo)
+library(stringr)
+library(xtable)
+library(xts)
+library(zoo)
+#
+```
+
+
+Load data
+
+
+```{r,load_data,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,results='hide'}
+# load loan_data
+loan_data <- read.csv("prosperLoanData.csv")
+#
+```
+
+
+
+## Data Summary
+
+The raw data has 113,937 rows and 81 columns. It contians information on each\
+loan made by the Prosper Company of San Fransico from Q4-2005 unitl Q1-2014.
+                                                                                
+
+```{r,dim_loan_data,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE}
+dim(loan_data)
+#
+```
+
+Input data provides specific information about: loan amount, borrower rate\
+(or interest rate), borrower APR, current loan status, borrower income, borrower\
+employment status and duration, borrower credit history, and the latest payment information.  
+
+```{r,summary_loan_data,echo=FALSE,message=FALSE,warning=FALSE}
+summary(loan_data)
+#
+```
+
+Based on goals of this analysis 54 original columns are retained and the rest\
+were dropped. Where possible, column names will be shortened.
+
+
+```{r,loan_data_subsetted _renamed,echo=FALSE,cache=TRUE,message=FALSE,warning=FALSE,results='hide'}
+#
+univariate_data <- loan_data
+univariate_data <- univariate_data[-c(1,2,c(10:13),23,24,39,40,c(44:46),51,53,c(57:59),67,c(69:76))]
+dim(univariate_data)
+summary(univariate_data)
+#
+```
+
+```{r,rename_data_rename_col,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE}
+# example of renaming a column; chicago <- rename(chicago, dewpoint = dptp)
+uni_data <- dplyr::rename(univariate_data, 
+                          RatingNumeric = ProsperRating..numeric.,
+                          RatingAlpha = ProsperRating..Alpha.,
+                          LoanCategory = ListingCategory..numeric.,
+                          EmploymentDuration = EmploymentStatusDuration,
+                          HomeMortgage = IsBorrowerHomeowner,
+                          CreditScoreLower = CreditScoreRangeLower,
+                          CreditScoreUpper = CreditScoreRangeUpper,
+                          FirstCreditLineDate = FirstRecordedCreditLine,
+                          CreditLinesPast7yrs = TotalCreditLinespast7years,
+                          RevolvingAccounts = OpenRevolvingAccounts,
+                          RevolvingMonthlyPayment = OpenRevolvingMonthlyPayment,
+                          OverdueLast7Years = DelinquenciesLast7Years,
+                          LatePayUnder30days =ProsperPaymentsLessThanOneMonthLate,
+                          LatePayOver30days = ProsperPaymentsOneMonthPlusLate,
+                          LoanDaysDelinquent = LoanCurrentDaysDelinquent,
+                          InitialDefaultCycle = LoanFirstDefaultedCycleNumber,
+                          LoanDurationMonths = LoanMonthsSinceOrigination,
+                          InvestorsFriendsCount = InvestmentFromFriendsCount,
+                          FriendsAmountInvested = InvestmentFromFriendsAmount)
+#dim(uni_data)
+names(uni_data)
+#  
+```
+
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+
+# Univariate Plots Section
+
+The table below is a six statistic summary of the 'BorrrowerAPR' column.
+
+```{r,summary_BorrowerAPR,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$BorrowerAPR)
+#
+```
+
+The following four barplots of the 'BorrowerAPR' column show frequency on the\
+y axis and Borrower's APR on the x axis. 
+
+The first plot has a binwidth of 0.05. In the next three plots the binwidth was\
+gradually decreased. Smaller binwidths show the extent to which Prosper uses\
+fine increments in interest rates.  
+
+A high frequency of loans are made at a rate of roughly 0.365 percent however\
+this fact is not visibly apparent when the chosen binwidth is 0.05.
+
+
+```{r,Univariate_Plot_BorrowerAPR_a,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+library(ggplot2)
+qplot(uni_data$BorrowerAPR, binwidth = 0.05)
+#
+```
+
+We can now see that there is a hidden spike in loan frequencies at the roughly\
+the 0.365 rate using a binwidth of 0.01 rather than 0.05.
+
+```{r,Univariate_Plot_BorrowerAPR_b,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$BorrowerAPR, binwidth = 0.01)
+#
+```
+
+By decreasing the binwidth even further we notice the incremental difference\
+interest rates being charged by the Prosper company doesn't seem feasible.\
+My conclusion is that these interest rates are randomly generated by the\
+individual or individuals providing the data and that these are not true\
+interest rates being charged by banks because there are 6677 different rates\
+mostly with a difference of 0.00001 which is extremely unlikely. Had I not\
+explored using different binwidths I probably would not have discovered this.
+
+```{r,Univariate_Plot_BorrowerAPR_c,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$BorrowerAPR, binwidth = 0.005)
+#
+```
+
+
+
+```{r,Univariate_Plot_BorrowerAPR_d,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$BorrowerAPR, binwidth = 0.001)
+#
+```
+
+The six statistic summary below of 'BorrowersRate' (interest rate) shows that\
+most interest rate are between 0.134 and 0.498 percent. 
+
+```{r,summary_BorrowerRate_a,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$BorrowerRate)
+#
+```
+
+
+The plot of 'BorrowerRate' below using a binwidth of 0.001 increases the\
+granulartiy visible in the dispersion of interest rate values.
+
+```{r,Univariate_Plot_BorrowerRate_a,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$BorrowerRate, binwidth = 0.001)
+#
+```
+
+The next plot below displays the 'BorrowerRate' distribution as a density\
+for comparison to the bar plot above. This density curve shows the relative\
+percentage of total on the y axis rather than count as in the plot above.\
+The concentration of loans around the rate of 0.14 and the spike in frequency\
+at the 3.25 rate level are noticable.
+
+```{r,Univariate_Plot_BorrowerRate_b,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+mu <- mean(uni_data$BorrowerRate)
+a <- ggplot(uni_data, aes(x = BorrowerRate, na.rm = TRUE))
+a + geom_density() +
+  geom_vline(aes(xintercept = mu),
+             linetype = "dashed", color ='darkred', size = 0.6)
+rm(a)
+#
+```
+
+The six statistic summary of 'LoanTerm' below indicates the median loan term\
+is 36 months a minimum of 12 months and a maximum of 60 months.
+
+```{r,summary_Term,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$Term)
+#
+```
+
+The histogram of 'LoanTerm' below identifies three loan term lengths\
+as either (12, 36, or 60) months, the most frequent being 36 months visually\
+repeating the results of the summary statistics above. 
+
+```{r,Univariate_Plot_Term,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+ggplot(uni_data, aes(Term)) +
+    geom_histogram()
+ #
+```
+
+The table of the 'BorrowerState' below shows counts of loans made by each state. 
+
+```{r,table_BorrowerState,echo=FALSE,message=FALSE,warning=FALSE}
+#
+table(uni_data$BorrowerState)
+#
+```
+
+The following barplot, shows the count of loans by state on the y axis and\
+the x axis lists each state. The first bar in the lower left of the graph shows\
+over 5 thousand borrowers had not indicated which state they were located in.\
+not provide the state information to the lender. 
+
+```{r,Univariate_Plot_BorrowerState,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+library(ggpubr)
+p <- qplot(uni_data$BorrowerState)
+p + rotate_x_text(90)
+rm(p)
+#
+```
+
+The following table of EmploymentStatus' gives counts for each employment group.
+
+```{r,summary_EmploymentStatus,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$EmploymentStatus)
+#
+```
+
+The following barchart helps visualize the counts of the different employment\
+groups Prosper is making loans to. 
+
+Columns 1,4 & 6 contain 11,408 loans without a without a clearly defined\
+employment type. Perhaps these loans weren't made to individuals but to some\
+kind of business or organization.
+
+```{r,Univariate_Plot_EmploymentStatus,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+library(ggpubr)
+p <- qplot(uni_data$EmploymentStatus)
+p + rotate_x_text(45)
+rm(p)
+# 2255 + 5347 + 3806
+#
+```
+
+The table below of 'HomeMortgage', tells us the number of borrowers who have a\
+home mortgage and the number of those who don't have one. Its clear from these\
+counts that Prosper makes loans to both those with and without a home mortgage\
+in about the same frequency.
+
+```{r,summary_HomeMortgage,echo=FALSE,message=FALSE,warning=FALSE}
+# check to see if any NAs exist in the 'HomeMortgage column
+# sum(is.na(uni_data$HomeMortgage))
+summary(uni_data$HomeMortgage)
+#
+```
+
+The following table on 'IncomeRange' shows the counts borrowers in each grouping.\
+Two of the values don't represent income ranges which account for 8,547 loans.\
+The order of the columns are not in an sensible order like increasing from left\
+to right. 
+
+```{r,summary_IncomeRange,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$IncomeRange)
+# 7741 + 806
+#
+```
+
+In the following barplot of 'IncomeRange' plots the same information in the\
+above table. This will be changed in the plot following the one below.
+
+```{r,Univariate_Plot_IncomeRange_a,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+# The barplot below shows counts for the different 'IncomeRange' groups. We, can\
+# see that the columns are not arranged from left to right in ascending rank.\
+# Column 7 labled 'Not displayed' have values of NA. Column 8 labeled 'Not\
+# employed' are also NA values. Becuase of these two columns having NA values,\
+# the rows containing these NA's should be removed when performing calculations\
+# using the 'IncomeRange' column.
+# levels(uni_data$IncomeRange)
+# library(ggpubr)
+# p <- qplot(uni_data$IncomeRange)
+# p + rotate_x_text(45)
+# rm(p)
+#
+```
+
+After converting the 'IncomeRange' variable into an ordered factor we re-plot it\
+to create a more accurate visualization of the actual income distribution for the\
+rows containing valid income ranges. 
+
+```{r,Univariate_Plot_IncomeRange_b,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+uni_data$IncomeRange_ordered <- ordered(uni_data$IncomeRange, levels = c("Not employed","Not displayed","$0","$1-24,999","$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+#levels(uni_data$IncomeRange_ordered)
+library(ggpubr)
+p <- qplot(uni_data$IncomeRange_ordered)
+p + rotate_x_text(45)
+rm(p)
+#
+```
+
+The table below divides 'IncomeVerifiable' into the counts of yes and no values.
+no.
+
+```{r,summary_IncomeVerifiable,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$IncomeVerifiable)
+#
+```
+
+The barplot 'IncomeVerifiable' below, shows the same difference in yes and no\
+counts visually. A visual comparison seems to provide a more meaningful message.
+
+```{r,Univariate_Plot_IncomeVerifiable,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$IncomeVerifiable)
+#
+```
+
+
+```{r,add_columns_extracted_from_LoanOriginationQuarter,echo=FALSE,message=FALSE,warning=FALSE}
+library(stringr)
+uni_data$OriginationQuarter <- str_sub(uni_data$LoanOriginationQuarter, 1,2)
+uni_data$OriginationYear <- str_extract(uni_data$LoanOriginationQuarter, "\\d{4}")
+```
+
+
+
+The following table of 'LoanOrigainationQuarter', is an un-ordered count of\
+loans made by Prosper company druing each quarter.
+
+```{r,summary_OriginationQuarter,echo=FALSE,message=FALSE,warning=FALSE}
+#
+table(uni_data$OriginationQuarter)
+#        
+```
+
+The following plots shows the count of loans made by Prosper each quarter. 
+
+```{r,Univariate_Plot_OriginationQuarter,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+# library(ggpubr)
+# p <- qplot(uni_data$LoanOriginationQuarter)
+# p + rotate_x_text(45)
+# rm(p)
+#
+library(ggplot2)
+# qplot(uni_data$OriginationYear)    
+qplot(uni_data$OriginationQuarter) 
+#
+```
+
+The table below provides the number of loans originated by year.
+
+```{r,table_OriginationYear,echo=FALSE,message=FALSE,warning=FALSE}
+#
+table(uni_data$OriginationYear)
+#
+```
+
+The following barplot of "OriginationYear" display counts of loans originated\
+yearly by the Prosper.
+
+```{r,Univariate_Plot_OriginationYear,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$OriginationYear) 
+#
+```
+
+Added a new column called 'LoanCode' to the data frame uni_data that correctly\
+renames the the loan category values that are currently integers with a human\
+readable value using a string.
+
+```{r,rename_loan_categories,echo=FALSE,message=FALSE,warning=FALSE,results='hide'}
+# created new column: LoanCode, replacing the integers values with strings
+library(plyr)
+library(dplyr)
+typeof(uni_data$LoanCategory)
+uni_data$LoanCode <- mapvalues(as.factor(uni_data$LoanCategory), from = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"), to = c("Not Available","Debt Consolidation","Home Improvement","Business","Personal Loan","Student Use","Auto","Other","Baby Adoption","Boat","Cosmetic Procedure","Engagement Ring","Green Loans","Household Expenses","Large Purchases","Medical / Dental","Motorcycle","RV", "Taxes ","Vacation","Wedding Loans"), warn_missing =TRUE)
+# summary(uni_data$LoanCode)
+```
+
+After producing a summary table of the 'LoanCategory' I changed the data type\
+of 'LoanCategory' from integer to factor creating a different table showing the\
+counts for each loan category. 
+
+```{r,summary_LoanCode,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$LoanCode)
+#
+```
+
+The bar plot below shows the 'LoanCode' counts of 20 categories of loans\
+the Prosper company makes, consolidation loans being the most frequent.
+
+```{r,Univariate_Plot_LoanCode,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+library(ggpubr)
+p <- qplot(uni_data$LoanCode)
+p + rotate_x_text(45)
+rm(p)
+#
+```
+
+The table below summarizes the counts of the eight credit grades.
+
+```{r,summary_CreditGrade,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$CreditGrade)
+#
+```
+
+The bar plot below displays the eight 'CreditGrades' distribution that includes\
+a group of 80K unclassified loan grades. These credit grades only apply to loans\
+prior to the year 2009 and therefore this variable is not consistant across the\
+data set and should be used with caution in any calculations.
+
+```{r,Univariate_Plot_CreditGrade,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+qplot(uni_data$CreditGrade)
+#
+```
+
+- The summary table below shows counts of the 12 'LoanStatus' categories.
+
+```{r,summary_LoanStatus,echo=FALSE,message=FALSE,warning=FALSE}
+#
+as.table(summary(uni_data$LoanStatus))
+#
+```
+
+The barchart below shows the loan fruquencies of each 'LoanStatus' category.
+
+```{r,Univariate_Plot_LoanStatus,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+barchart(uni_data$LoanStatus)
+#
+```
+ 
+The table below summarizes the number of CurrentDelinquencies. 
+
+```{r,summary_CurrentDelinquencies,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(uni_data$CurrentDelinquencies)
+#
+```
+
+The histogram below shows the frequency of the 'LoanDaysDelinquent' variable.\
+
+```{r,Univariate_Plot_LoanDaysDelinquent,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+histogram(uni_data$LoanDaysDelinquent)
+#
+```
+
+The following cell displays the results of the summmary function producing a six\
+statistic table of the CreditScoreRangeLower and CreditScoreRangeUpper.
+
+```{r,summary_CreditScore_LU,echo=FALSE,message=FALSE,warning=FALSE}
+#
+summary(round(uni_data$CreditScoreLower),2)
+summary(round(uni_data$CreditScoreUpper),2)
+#
+```
+
+Added 'CreditScoreMean' column by calculating the mean of the difference between\
+'CreditScoreRangeLower' and 'CreditScoreRangeUpper'. The followign plots shows\
+the mean of the added column CreditScoreMean in a dark red dashed verticle line.
+
+```{r,Univariate_Plot_CreditScoreMean,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10.0,fig.height=5}
+#
+uni_data$CreditScoreMean <- round((uni_data$CreditScoreLower + uni_data$CreditScoreUpper)/2,0)
+summary(uni_data$CreditScoreMean)
+CreditScore_mu <- summary(uni_data$CreditScoreMean)['Mean']
+CreditScore_mu
+a <- ggplot(uni_data, aes(uni_data$CreditScoreMean)) +
+geom_histogram(bins = 20, color = "black", fill = "orange") +
+geom_vline(aes(xintercept = CreditScore_mu), linetype = "dashed", color = 'darkred', size = 0.2)
+a
+#
+rm(a)
+date()
+#
+```
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+# Univariate Analysis
+
+## What is the structure of your dataset?
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+The initial raw data set contained 113,937 (observations / rows), with 81\
+(variables / columns), on each loan, such as: loan amount, borrower rate \
+(or interest rate), current loan status, borrower income, borrower employment\
+status, borrower credit history, and the latest payment information, to name\
+a few. In the early stage of this analysis twenty seven rows were dropped\
+bringing the number of columns at this stage of the analysis to 54. 
+
+</div>
+
+```{r,structure_uni_data,echo=FALSE,message=FALSE,warning=FALSE}
+dim(uni_data)
+```
+
+
+The cell below shows the structure of the cleaned data frame that was used in\
+the univatiate analysis.
+
+```{r, univariate_data_structure,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE}
+#
+str(uni_data)
+#
+```
+
+## What is/are the main feature(s) of interest in your dataset?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Features relating to the five C's of Credit analysis: (capacity, capital,\
+conditions, character & collateral). Because most of the loans Prosper makes\
+are consolidation loans and not home loans varialbes representing colateral are\
+not present in this data.
+
+</div>
+
+***
+
+- LoanStatus                    [4]         Condition
+- Term                          [3]         Condition
+- LoanCategory                  [11]        Condition
+- BorrowerState                 [12]        Condition
+- Occupation                    [13]        Capacity
+- EmploymentStatus              [14]        Capacity
+- EmploymentDuration            [15]        Capacity
+- HomeMortgage                  [16]        Capacity
+- OverdueLast7Years             [30]        Character
+- DebtToIncomeRatio             [34]        Capacity
+- IncomeRange                   [35]        Capacity
+- IncomeVerifiable              [36]        Character
+- StatedMonthlyIncome           [37]        Capacity
+- LoanOriginationDate           [47]        Condition
+- MonthlyLoanPayment            [49]        Capacity
+- CreditScoreMean               [55]        Character
+
+## What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+*Supporting features of interest*
+
+- CreditScoreLower              [18]        Character
+- CreditScoreUpper              [19]        Character
+- TotalInquiries                [27]        Character
+- CurrentDelinquencies          [28]        Character
+- AmountDelinquent              [29]        Character
+- LoanOriginalAmount            [46]        Condition
+- InvestorsFriendsCount         [52]        Character
+- FriendsAmountInvested         [49]        Character
+- Investors                     [54]        Capacity
+
+</div>
+
+
+
+## Did you create any new variables from existing variables in the dataset?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+- Columns 26 & 27 (used to create the CreditScoreMean column '55' in the\
+uni_data so that the standard deviation of the CreditScoreMean could be\
+calculated to enalbe analysis of the spread in CreditScoreMeans as they\
+relate to the 5 C's.
+
+- Added the 'LoanCode' column ' changing the Loan Cateories from numerics\
+vlues to string values in order to generate meaningful axis lables on the\
+plots. This brought the total column count up to 56. 
+
+- Added 'OriginationQuarter' & 'OriginationYear; columns by extracting two
+strings from the 'LoanOriginationQarter' column bringing the column count up to\
+58 columns.
+
+- Added 'IncomeRage_ordered' to rearrange the vlaues in the 'IncomeRange'\
+column in ascending order for those columns that had monetary values bringing\
+the column count up to 59.
+
+</div>
+
+
+## Of the features you investigated, were there any unusual distributions?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+The BorrowerAPR was very unusual in that, although there were over 113,000\
+different loans contained in this data set, there were 6677 different interest\
+rates each separated by a difference of just 0.00001 percent. It would be un-\
+realistic for a bank to be able to apply this many different rates to its pool\
+of borrowers. With out performing this exploratory analysis I wouldn't have\
+stumbled upon this finding.
+
+</div>
+
+
+## Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+ *Columns Modified*
+
+- Used the lubridate package year function to capature the date field that\
+enabled plotting of the data in the "LoanOringinationDate" column.
+
+- This transformation was done to enable plotting of time data.
+
+*Ordered factor variables in the 'IncomeRange' column improving plot readability.*
+
+- Reorderd the income factors to plot the income ranges in logical sequence.
+
+*Rotated the x_tic labels in three plots to improve the display of those labels'*
+
+- EmplymentStatus
+
+- IncomeRange
+
+- LoanCode (replaced the LoanCategory column for plotting this data)
+
+*Columns dropped:*
+
+- columns 1,2 (listing numbers aren"t" any of the 5 C's of loan risk analysis (Capital,\
+Capacity, Conditions, Character or Colateral)
+
+- cloumns 10:16, (these columns pertain to business efficiency and profitability but give\
+little informatin on any of the 5 C's of loan risk analysis)\
+
+- columns 23:24 (insufficient information is available regarding these values)
+
+- columns 39:40 (relate to public records but we don't know the significance here)\
+
+- column 46 (not sure what kinds of Trades these are and how they relate to the 5 C's)
+
+- column 52:58 (each column had roughly 90K NAs or missing data so only 10% of the\
+observations provide information on this feature)
+
+- columns 59 & 61 (each columns has over 95K NAs, same as above)
+
+- columns 69:72 (columns relate to costs and profitability of Prosper's business\
+operations without giving information relevant to the 5 C's.\
+
+
+</div>
+
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+# Bivariate Plots Section
+
+*Rename (copy) uni_data to bi_data for further bivariate analysis*
+
+The data frame above was renamed to bi_data and will be used for the bivariate\
+section of analysis.
+
+```{r, uivariate_data_renamed,echo=FALSE,message=FALSE,warning=FALSE}
+#
+bi_data <- uni_data
+#
+```
+
+The following eleven plots use the ggpairs function to detect if a correlation\
+exists between the two variables in the plots.
+
+```{r,Bivariate_Plot_1,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#
+date()
+# names(bi_data)
+p <- ggpairs(
+    bi_data, columns = c("BorrowerRate", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color =  "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plot_2,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+# 
+date()
+p <- ggpairs(
+    bi_data, columns = c("LoanDurationMonths", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color =  "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plot_3,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+# 
+date()
+p <- ggpairs(
+    bi_data, columns = c("EmploymentStatus", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plot_4,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+# 
+date()
+p <- ggpairs(
+    bi_data, columns = c("IncomeVerifiable", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plot_5,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#  
+date()
+p <- ggpairs(
+    bi_data, columns = c("IncomeRange_ordered", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_6,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#
+date()
+p <- ggpairs(
+    bi_data, columns = c("OverdueLast7Years", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_7,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#
+date()
+p <- ggpairs(
+    bi_data, columns = c("CreditScoreMean", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_8,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#  
+date()
+p <- ggpairs(
+    bi_data, columns = c("FriendsAmountInvested", "CurrentDelinquencies"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CurrentDelinquencies")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_5,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#  
+date()
+p <- ggpairs(
+    bi_data, columns = c("TotalInquiries", "Investors"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "TotalInquiries")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_10,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#  
+date()
+p <- ggpairs(
+    bi_data, columns = c("FriendsAmountInvested", "DebtToIncomeRatio"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "FriendsAmountInvested")
+    )
+)
+p
+rm(p)
+#
+```
+
+```{r,Bivariate_Plots_11,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=5,fig.height=5}
+#  
+date()
+p <- ggpairs(
+    bi_data, columns = c("CreditScoreLower", "LoanOriginalAmount"),
+    lower = list(
+        continuous = "smooth",
+        combo = "facetdensity",
+        mapping = aes(color = "CreditScoreLower")
+    )
+)
+p
+rm(p)
+#
+```
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+
+# Bivariate Analysis
+
+## Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+ 
+*Bivariate Plot 1 analysis*
+
+BorrowerRate vs. CurrentDelinquencies were the two variables in the first\
+bivariate plot. The results show a correlation of 0.177 indicating a weak\
+correlation.
+
+*Bivariate Plot 2 analysis*
+
+LoanDurationMonths vs. CurrentDelinquencies were the two variables plotted in\
+the second bivariate plot producing a weak correlation coefficeint of 0.248.
+
+*Bivariate Plot 3 analysis*
+
+EmploymentStatus vs. CurrentDelinquecies were used in the third bivariate plot.\
+In this plot a correlation calculation was not returned with the plot because\
+the inputs are non numeric.  
+
+*Bivariate Plot 4 analysis*
+
+IncomeVerfiable vs. CurrentDelinquencies were plotted in the fourth bivariate\
+plot. From this plot we can just see that IncomeVerifiable shows less variance.
+This is probably mainly becuase lenders are less likely to lend to borrowers\
+without a verifiable income. Therefore the lower numbers of loans generate a\
+lower variance.
+
+*Bivariate Plot 5 analysis*
+
+IncomeRange_ordered vs. CurrentDelinquencies were plotted in the 5th bivarate\
+plot. This plot visibly shows that the higher the income range the lower the\
+CurrentDelinquencies rate.
+
+*Bivariate Plot 6 analysis*
+
+OverdueLast7Year vs CurrentDelinquencies were the two variables plotted in the\
+sixth bivariate plot. A correlation coefficient was calculated since both of\
+these varaibles are numeric which turns out to be .378 indicating there is\
+significance in the relationship between these two variables. So would be\
+correct to say that the 'OverdueLast7Years' variable is related to the level of\
+'CurrentDelinquencies'.
+
+*Bivariate Plot 7 analysis*
+
+CreditScoreMean vs. CurrentDelinquencies were the two varaibles plotted in the\
+seventh bivaraite plot. It turns out that, there is a significant negative\
+correlation between these two varaibles which was calculated to be -0.368.\
+In other words as the 'CreditScoreMean' increases, the 'CurrentDelinquencies'\
+rate decreases. This explains why Credit Score is such a key component of loan\
+risk analysis when being used by lenders to evaluate whether or not to grant a\
+loan request.
+
+*Bivariate Plot 8 analysis*
+
+'FriendsAmountInvested' vs. 'CurrentDelinquencies' were the two varaibles plot-\
+ted in this bivaraite plot. The returned correlation cooefficient of 0.0153 is\
+not considered significant for this analysis. 
+
+*Bivariate Plot 9 analysis*
+
+'TotalInquiries' vs. 'Investors' were the two variables used in this plot.\
+A correlation coefficient of 0.0263 was returned meaning little correlation is\
+present among these two varaibles.
+
+*Bivariate Plot 10 analysis*
+
+'FreindsAmountInvested vs. 'DebtToIncomeRatio' were the two varialbes used in\
+this bivariate plot. The result was a correlation coefficient of only 0.0279,\
+not an indication of a significant correlation between these two variables. 
+
+*Bivariate Plot 11 analysis*
+
+'CreditScoreLower' vs. 'LoanOriginationAmount' were the two variables used in\
+this bivaraiate plot. A correlation coefficient of 0.341 was returned, meaning\
+the relationship between these two variables is at the lower end of the signifi-\
+cant level.
+
+*Bivariate Plot Analysis Summary*
+
+The three variables with the highest correlation coefficients were the 'Overdue\
+Last7Years' at 0.378, then 'CreditScoreMean at -0.068, and finally 'CreditScore\
+Lower' at 0.341. The variable with the next highest correlation was 'Freinds\
+AmountInvested'. Analyzing these results we can conclude that a persons past\
+credit performance for the most part along with some influence from friends\
+support might provide many of the characteristics that lend to predicting future\
+loan outcomes. 
+
+
+</div>
+
+
+## Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+The bivariate plot of 'CreditScoreLower' vs. 'LoanOriginalAmount' calculates a\
+correlation coefficient of 0.341 which was one of the top three strongest\
+correlations discovered thus far.
+
+</div>
+
+
+## What was the strongest relationship you found?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+The strongest relationship btween two variables I found thus far was between\
+the 'OverdueLast7Years' vs. the 'CurrentDelinquencies' columns. the correlation\
+cooeficiennt was calculated to be 0.378. 
+
+</div>
+
+
+<br><br><br><br>
+
+***
+
+# Multivariate Plots Section
+
+*Renamed (copied bi_data set) to multi_data for further multivariate analysis*
+
+
+```{r, bi_data_renamed,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,results='hide'}
+#
+multi_data <- bi_data
+names(multi_data)
+#
+```
+
+Eleven multivariate plots considering different relationships between three or\
+more variables will follow. Each of these variables were analyzed above to\
+determine what their relationship was with one other variable (a bivariate\
+analysis). I'll be using colors, sizes and shapes to show how these additional\
+varaibles related with each of the first two variables. In the following plots\
+I'll be looking at relationships between: CreditScoreMean, CurrentDelinquencies,\
+HomeMortgage, IncomeVerfiable, Term, LoanCode, DebtToIncomeRatio, BorrowerAPR,\
+IncomeRange_ordered, InvestorsFriendCount, FriendsAmountInvested & Occupation.\
+
+***
+
+Multivariate_Plot_a, compares 'CurrentDelinquencies' along the x axis with\
+CreditScoreMean' along the y axis. The value of the HomeMortgage which can\
+either be true or false is coded in color. In this plot I am looking to see\
+if having a HomeMortgage is related to CurrentDelinquencies and CreditScoreMean.\
+Becuase all of the red points fall mainly lower and farther to the right\
+borrowers with home mortgages tend to have better CreditScoreMeans and lower\
+variance in the number of loan payment delinquencies.
+
+```{r,multivariate_Plot_a,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+set.seed(2019)
+multi_data_samp <- sample(multi_data, 72000, replace = T)
+sp <- qplot(multi_data_samp$CurrentDelinquencies,
+            multi_data_samp$CreditScoreMean,
+            data = multi_data_samp,
+            color = multi_data_samp$HomeMortgage,
+            alpha = 0.2)
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_b, compares CreditScoreMean' along the x axis with\
+'CurrentDelinquencies' along the y axis. In this plot however, we want to know if\
+having a verified income with the lender is related to delinquent loan payments\
+and or the borrower's credit score mean. The low percentage of red points\
+compared to green points indicates very few loans are made to borrowers without\
+a verfied income. For those loans that have been made to borrowers without a\
+verified income the data suggests that few loans made to this group have the\
+lowest level of payment delinquencies. Very few of the red points lie along the\
+x axis compared with the green points. 
+
+```{r,multivariate_Plot_b,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 72000, replace = T)
+sp <- qplot(multi_data_samp$CreditScoreMean,
+            multi_data_samp$CurrentDelinquencies,
+            data = multi_data_samp,
+            color = multi_data_samp$IncomeVerifiable,
+            alpha = 0.2)
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_c, compares'Term' along the x axis with\
+'CurrentDelinquencies' along the y axis. It looks as though from this plot, that nearly all loans\
+with a 60 month term are going to borrowers with a home mortgage and the\
+delinquency rate among those loans is relatively low. On the other hand, loans\
+with a 12 month term appear to be almost evenly disributed among the borrowers\
+who have a home mortgage and borrowers who don't have a home mortgage.\
+However, the most prevalent loan term (the 36 month term) data suggests\
+that payment delinquencies by non mortgage holders is far greater than the\
+number of payment delinquencies by the borrowers who have a home mortgage.\
+Moreover the frequency of current delinquencies (red points) is more prevalent\
+in the 36 month term category as can be seen in the higher relatvie number of\
+red points to green points.
+
+```{r,multivariate_Plot_c,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 20000, replace = T)
+sp <- qplot(multi_data_samp$Term,
+            multi_data_samp$CurrentDelinquencies,
+            data = multi_data_samp,
+            color = multi_data_samp$HomeMortgage,
+            alpha = 0.2) +
+    geom_jitter(position=position_jitter(0.8)) +
+    scale_y_continuous(trans = "log2")
+sp
+rm(sp,multi_data_samp)
+```
+
+Multivariate_Plot_d, compares 'CurrentDelinquencies' along the x axis with\
+'LoanCode' along the y axis. I've added 'IncomeRange_ordered' using color\
+visualizing the relationship of 'IncomeRange_ordered' with loan purpose listed as\
+'LoanCode' and current payment delinquencies listed as 'CurrentDelinquencies'.\
+The conlusion I draw from this plot is that current payment delinquencies are\
+fairly evenly distributed across each of the income groupings. Other than that,\
+there are a few categories of loans that have fewer payment delinquencies that\
+most of the others, such as: "Green Loans", "Boat Loans", however this is most\
+likely due to fewer numbers of these loans being made.
+
+```{r,multivariate_Plot_d,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 110000, replace = T)
+multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+sp <- qplot(multi_data_samp_f$CurrentDelinquencies,
+            multi_data_samp_f$LoanCode,
+            data = multi_data_samp_f,
+            color = multi_data_samp_f$IncomeRange_ordered,
+            alpha =0.4) +
+    xlim(NA, 20) +
+    geom_jitter(position=position_jitter(0.05))
+sp
+rm(sp,multi_data_samp,multi_data_samp_f)
+```
+
+Multivariate_Plot_e, compares'DebtToIncomeRatio' along the x axis with\
+'CurrentDelinquencies' along the y axis. Using 'IncomeRange_ordered' with color\
+to stratify the current payment delinquencies by income group. An initial\
+observation is this lender is reluctant to approve loans above a DTI of greater\
+than roughly 35%, although there are some loans made over that level. It\
+appears that the number of current delinquencies is fairly evenly distributed\
+among the various income range groupings. 
+
+```{r,multivariate_Plot_e,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 110000, replace = T)
+sp <- qplot(multi_data_samp$DebtToIncomeRatio,
+            multi_data_samp$CurrentDelinquencies,
+            data = multi_data_samp,
+            color = multi_data_samp$IncomeRange_ordered,
+            alpha = 0.3) +
+    scale_x_continuous(trans = "sqrt") +
+    geom_jitter(position=position_jitter(0.5)) 
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_f, compares 'BorrowerAPR' along the x axis with\
+'CurrentDelinquencies' along the y axis. The plot indicates that the distribution of\
+current delinquencies is normally distributed among the 36 month loan term\
+shown in greed. It is less obvious what the distribution is for the 12, and 60\
+month loan terms. 
+
+
+```{r,multivariate_Plot_f,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 16000, replace = T)
+sp <- qplot(multi_data_samp$BorrowerAPR,
+            multi_data_samp$CurrentDelinquencies,
+            data = multi_data_samp,
+            color = as.factor(multi_data_samp$Term),
+            alpha = 0.02) +
+    geom_jitter(position=position_jitter(0.2)) +
+    scale_y_continuous(trans = "log")
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_g, compares 'BorrowerAPR' along the x axis with\
+'DebtToIncomeRatio' along the y axis. From this plot we can confirm that the\
+mean 'BorrowerARR' is roughly .22 and that the mean DTI is roughly .28. We can\
+also see that the distribution of each varaible potted against the other is\
+normally shaped. Finally, the distribution with regard to the 'Term' appears to\
+be nearly identical for each of the three term lengths. 
+
+
+```{r,multivariate_Plot_g,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 3000, replace = T)
+sp <- qplot(multi_data_samp$DebtToIncomeRatio,
+            cut(multi_data_samp$BorrowerAPR,5),
+            data = multi_data_samp,
+            color = cut(multi_data_samp$BorrowerAPR,5),
+            alpha = 0.2) #+
+    # geom_jitter(position=position_jitter(0.2)) +
+    # scale_x_continuous(trans = "log10") +
+    # scale_y_continuous(trans = "log10")
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_h, compares 'CurrentDelinquencies' along the x axis with\
+'IncomeRange_ordered' along the y axis using color for the 'Term' variable.\
+This plot shows that the number of current delinquencies is fairly evenly\
+distributed between the upper four income ranges. Taking a second look at the\
+summary for the 'IncomeRange_ordered' varaible we see that only 621 loans were\
+made to borrowers in the lowest income category and that only 7274 loans out of\
+more than 110,000 loans were made to borrowers in the $1-24,999 income range\
+which is about 0.06 percent of total loans.
+
+```{r,multivariate_Plot_h,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 5000, replace = T)
+multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+sp <- qplot(x = multi_data_samp_f$CurrentDelinquencies,
+            y = multi_data_samp_f$IncomeRange_ordered,
+            data = multi_data_samp_f,
+            color = as.factor(multi_data_samp_f$Term),
+            alpha = 0.2) +
+    xlim(NA, 20) +
+    geom_jitter(position=position_jitter(0.5))
+sp
+rm(sp,multi_data_samp,multi_data_samp_f)
+#
+```
+
+Multivariate_Plot_i, compares 'CurrentDelinquencies' along the x axis with\
+'FriendsAmountInvested' along the y axis using color with  the'CreditScoreMean'\
+variable. As'FreindsAmountInvested. increases,'CurrentDelinquencies' decrease.\
+This is perhaps one of the fundamental pricipals in how peer funding works. By\
+having peers involved in the loan process the on time re payments increase. 
+
+```{r,multivariate_Plot_i,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 110000, replace = T)
+sp <- qplot(multi_data_samp$CurrentDelinquencies,
+            multi_data_samp$FriendsAmountInvested,
+            data = multi_data_samp,
+            color = cut(multi_data_samp$CreditScoreMean, 4),
+            alpha = 0.2) +
+    xlim(NA, 40)
+    # ylim(450,800)
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_j, compares 'CreditScoreMean' along the x axis with\
+'FriendsAmountInvested' along the y axis using color for the 'FreindsAmountInvested'\
+variable. The frequency in 'FreindsAmountInvested' values appear to show no\
+difference in whether or not the borrower has a home mortgage or not.
+
+```{r,multivariate_Plot_j,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+multi_data_samp <- sample(multi_data, 110000, replace = T)
+sp <- qplot(multi_data_samp$CreditScoreMean,
+            multi_data_samp$FriendsAmountInvested,
+            data = multi_data_samp,
+            color = multi_data_samp$HomeMortgage,
+            alpha = 0.2) +
+    geom_jitter(position=position_jitter(0.2)) +
+    ylim(NA,20000)
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+Multivariate_Plot_k, compares 'CurrentDelinquencies' along the x axis with\
+'Occupation' along the y axis using color for the 'HomeMortgage' variable.\
+From this plot we can visually see that the borrowers without a home mortgage\
+appear to have a greater frequency of current delinquencies compared to the\
+borrowers who have a home mortgage. This is evidenced by the green points\
+coalescing on the left along the y axis and the red points gravitating toward\
+the right side along the y axis. 
+
+```{r,multivariate_Plot_k,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=15,fig.height=20}
+multi_data_samp <- sample(multi_data, 110000, replace = T)
+sp <- qplot(multi_data_samp$CurrentDelinquencies,
+            multi_data_samp$Occupation,
+            data = multi_data_samp,
+            color = multi_data_samp$HomeMortgage,
+            alpha = 0.2)
+sp
+rm(sp,multi_data_samp)
+#
+```
+
+<br><br><br><br>
+
+**Linear Models**
+
+
+```{r,lm_a,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=10}
+multi_data_samp <- sample(multi_data, 1000, replace = T)
+multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+f1 <- lm(CurrentDelinquencies ~ CreditScoreMean, data = multi_data_samp_f)
+f2 <- update(f1, ~ . + HomeMortgage)
+f3 <- update(f2, ~ . + DebtToIncomeRatio)
+f4 <- update(f3, ~ . + BorrowerAPR)
+f5 <- update(f4, ~ . + EmploymentStatus)
+f6 <- update(f5, ~ . + EmploymentDuration)
+f7 <- update(f6, ~ . + IncomeRange)
+f8 <- update(f7, ~ . + Term)
+f9 <- update(f8, ~ . + BorrowerState)
+f10 <- update(f9, ~ . + Occupation)
+f11 <- update(f10, ~ . + LoanOriginationDate)
+f12 <- update(f11, ~ . + IncomeVerifiable)
+#
+mtable(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12)
+#suppressMessages(mtable())
+#suppressWarnings(mtable())
+#
+```
+
+
+```{r,remove_fit,echo=FALSE}
+rm(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12)
+rm(p)
+```
+
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+
+# Multivariate Analysis
+
+## Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Through this analysis I've discovered that the 'CreditScoreMean' and 'CurrentDelinquencies' are inversely related.
+
+</div>
+
+
+## Were there any interesting or surprising interactions between features?
+ 
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Through the analysis I've also dsicovered that on average borrowers who have a 'HomeMortgage' have fewer "CurrentDelinquencies'.
+
+
+Through this analysis I also discivered that the higher the Borrower's 'DebtToIncomeRatio' value, the higher the "BorrowerAPR' / annual effective interest rate.
+
+
+</div>
+
+
+## OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+The linear model I created attained an R-squared result of 1.00 which I think is about maximum possible. So perhaps this is a good model. 
+
+</div>
+
+
+
+------
+
+<br><br><br><br>
+
+***
+
+<br><br><br><br>
+
+
+# Final Plots and Summary
+
+
+
+
+
+
+<br><br><br><br>
+
+***
+
+## Plot One
+```{r,final_plot_1,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+library(ggplot2)
+multi_data_samp <- sample(multi_data, 100000, replace = T)
+sp <- qplot(CreditScoreMean,
+            CurrentDelinquencies,
+            color = cut(CreditScoreMean,6),
+            data = multi_data_samp) +
+stat_smooth(method='lm',se=FALSE)
+sp
+rm(sp,multi_data_samp)
+```
+
+## Description One
+
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Final Plot 1 shows the relationship between the dependent or response variable\
+'CurrentDelinquencies' and the independent variable 'CreditScoreMean which was\
+divided into six levels with the cut function. A regresssion line was plotted\
+through the pints to show that  the two variables are inversely related
+
+
+</div>
+
+
+## Plot Two
+```{r,final_plot_2,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=10,fig.height=5}
+library(ggplot2)
+multi_data_samp <- sample(multi_data, 80000, replace = T)
+multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+sp <- qplot(CurrentDelinquencies,
+            IncomeRange_ordered,
+            color = cut(CreditScoreMean,5),
+            data = multi_data_samp_f)
+sp
+rm(sp,multi_data_samp,multi_data_samp_f)
+```
+
+## Description Two
+
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Final Plot 2 shows the relationship between the dependent variable\
+'CurrentDelinquencies' which was plotted on the x axis instead of the y axis\
+for ease of labeling of the tick labels. Color was added to this plot to show\
+the interrelationship of the 'CreditScoreMean' variable. This plot clearly\
+shows that the lower credit scores have the greatest number of payment\
+delinquencies.
+
+</div>
+
+
+## Plot Three
+```{r,final_plot_3,cache=TRUE,echo=FALSE,message=FALSE,warning=FALSE,fig.width=15,fig.height=20}
+library(ggplot2)
+multi_data_samp <- sample(multi_data, 70000, replace = T)
+multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+sp <- qplot(CurrentDelinquencies,
+            LoanCode,
+            color = cut(CreditScoreMean,6),
+            data = multi_data_samp,
+            alpha = 0.2)
+sp
+rm(sp,multi_data_samp,multi_data_samp_f)
+#
+```
+
+## Description Three
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+Final Plot three shows the relationship between 'LoanCode' which are the loan\
+categories on the y axis and 'CurrentDelinquencies' on the x axis. The\
+'CreditScoreMean' variable was cut into seven groupings and used interacively\
+in this plot. This plot demonstrates the majore significance of the\
+'CreditScoreMean' or most credit rating systems in general. Here we can see that\
+very few delinquencies show up for the lowest credit scores irregardless of\
+laon purpose. This is most likey because lenders are not lending that much to\
+borrowers with very low credit scores. On the other hand we can also see that\
+the borrowers with the highest credit scores tend to have the fewest number\
+of delinquent payments irregardles of the purpose of the loans. We can also\
+see that certain categories of loans are not as prevalent like boat loans and\
+RV loans for example. 
+example. 
+variabe
+
+
+</div>
+
+
+<br><br><br><br>
+
+***
+
+
+<br><br><br><br>
+
+
+# Reflection
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Conclusions:**
+
+This was a challenging project in a number of ways. First of all, the data set was\
+rather large in both the number of rows and columns. I found that one of the greatest\
+challenges for me was to get the coding right for making the plots. Once I could\
+accomplish that task I began to see the shortcomings in the data and had to start\
+making adjustments and modifications to get the plots to work. I think learning to\
+utilize the ggplot2 package and a number of other packages made the task go much\
+quicker than it otherwise would have without them. I thought it was very interesting\
+how the R-squared value of the model I created attained a 1.00 result which indicates\
+that the model predicts very well. If I did future work in this project I would\
+experiment with other types of graphs. 
+
+</div>
+
+
+*References:*
+
+- [STHDA](http://www.sthda.com/english/wiki/qplot-quick-plot-with-ggplot2-r-software-and-data-visualization)
+
+- [STHDA](http://www.sthda.com/english/wiki/be-awesome-in-ggplot2-a-practical-guide-to-be-highly-effective-r-software-and-data-visualization)
+
+- [STHDA](http://www.sthda.com/english/wiki/ggplot2-essentials)
+
+- [google search](https://www.google.com/search?q=what+are+the+indications+of+a+good+linear+model&oq=what+are+the+indications+of+a+good+linear+model&aqs=chrome..69i57.11016j0j7&sourceid=chrome&ie=UTF-8)
+
+- [Data Visualization](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+
+- [Advanced R by Hadley Wickham](http://adv-r.had.co.nz/)
+
+- [Customizing & Extending R Markdown](https://slides.yihui.name/2017-rstudio-conf-ext-rmd-Yihui-Xie.html1)
+
+- [R-bloggers](https://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/)
+
+- [Investopedia](https://www.investopedia.com/ask/answers/040115/what-most-important-c-five-cs-credit.asp)
+
+- [Wolters Kluwer](https://www.bizfilings.com/toolkit/research-topics/finance/business-finance/what-banks-look-for-when-reviewing-a-loan-application)
+
+- [Course Sample EDA Project 1](https://s3.amazonaws.com/udacity-hosted-downloads/ud651/AtlanticHurricaneTracking.html)
+
+- [Course Sample EDA Project 2](https://s3.amazonaws.com/udacity-hosted-downloads/ud651/GeographyOfAmericanMusic.html)
+
+- [Course Sample EDA Project 3](file:///Users/jamescwalmsley/Desktop/Udacity/Nanodegrees/Data_Analyst/Projects/Explore_Summarize_Data/diamondsExample_2016-05_files/diamondsExample_2016-05.html)
+
+- [MayukhSobo_Loan/EDA](https://github.com/MayukhSobo/Loan_EDA/blob/master/EDA_Loan.Rmd)
+
+- [Options](https://yihui.name/knitr/options/?version=1.1.463&mode=desktop)
+
+- [Cookbook for R](http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
+
+- [STHDA](http://www.sthda.com/english/wiki/ggplot2-colors-how-to-change-colors-automatically-and-manually)
+
+- [R Color CheatSheet](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf)
+
+- [Plotting with ggplot colours](http://environmentalcomputing.net/plotting-with-ggplot-colours-and-symbols/)
+
+- [STHDA](http://www.sthda.com/english/articles/32-r-graphics-essentials/133-plot-one-variable-frequency-graph-density-distribution-and-more/)
+
+- [lubridate](https://rawgit.com/rstudio/cheatsheets/master/lubridate.pdf)
+
+- [STHDA](http://www.sthda.com/english/wiki/ggally-r-package-extension-to-ggplot2-for-correlation-matrix-and-survival-plots-r-software-and-data-visualization)
+
+
+- [R documentation](https://www.rdocumentation.org/packages/base/versions/3.5.2/topics/cut)
+
+- [R-pubs](https://rpubs.com/pierrelafortune/cutdocumentation)
+
+- [R-Bloggers](https://www.r-bloggers.com/permanently-setting-the-cran-repository/)
+
+- [DataCamp](https://www.datacamp.com/community/tutorials/15-questions-about-r-plots)
+
+- [Pimp my RMD: a few tips for R Markdown](https://holtzy.github.io/Pimp-my-rmd/space_before_title)
+
+- [Quick R by Data Camp](https://www.statmethods.net/advgraphs/correlograms.html)
+
+- [STHDA](http://www.sthda.com/english/wiki/correlation-test-between-two-variables-in-r)
+
+- [Cookbook for R](http://www.cookbook-r.com/Graphs/Facets_(ggplot2)/)
+
+- [rdrr.io](https://rdrr.io/cran/ggpubr/man/rotate_axis_text.html)
+
+- [UCLA-idre](http://stats.idre.ucla.edu/r/modules/factor-variables/)
+
+- [Udacity](https://classroom.udacity.com/nanodegrees/nd002/parts/9f3e2782-9409-4c7a-b3d7-6197edfee54e/modules/67c46ff5-5a70-402e-881b-558d374953c6/lessons/729069797/concepts/8041293260923)
+
+- [Complete Dissertation](https://www.statisticssolutions.com/pearsons-correlation-coefficient/)
+
+- [R Documentation](https://stat.ethz.ch/R-manual/R-devel/library/base/html/data.frame.html)
+
+- [CFPB](https://www.consumerfinance.gov/ask-cfpb/what-is-a-debt-to-income-ratio-why-is-the-43-debt-to-income-ratio-important-en-1791/)
+
+- [ggplo2 extensions gallery ](http://www.ggplot2-exts.org/gallery/)
+
+- [German Rodriguez](https://data.princeton.edu/r/linearmodels)
+*Session Info*
+```{r,session_info,echo=FALSE,message=FALSE,warning=FALSE}
+sessionInfo()
+date()
+```
+
