@@ -1,16 +1,16 @@
 ---
 title: "Exploratory Data Analysis"
-output: 
+output:
   html_document:
-    #code_folding: "hide"
     fig_caption: yes
     fig_width: 10
     number_sections: no
     toc: yes
-    toc_float: true
-editor_options: 
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options:
   chunk_output_type: console
-  
 ---
 ======================================================================================
 
@@ -361,7 +361,10 @@ After converting the 'IncomeRange' variable into an ordered factor we re-plot it
 ```{r,cache=TRUE,Univariate_Plot_IncomeRange}
 # reordering the income range variables in ascending order from left to right
 # dropping two columns with unknown meaning
-uni_data$IncomeRange_ordered <- ordered(uni_data$IncomeRange, levels = c("Not employed","Not displayed","$0","$1-24,999","$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+uni_data$IncomeRange_ordered <- ordered(uni_data$IncomeRange,
+    levels = c("Not-employed","Not-displayed","$0","$1-24,999",
+               "$25,000-49,999","$50,000-74,999","$75,000-99,999",
+               "$100,000+"))
 #levels(uni_data$IncomeRange_ordered)
 # plotting the reordered results of the values in the 'IncomeRange' column
 p <- qplot(uni_data$IncomeRange_ordered)
@@ -396,7 +399,8 @@ qplot(uni_data$IncomeVerifiable)
 uni_data$OriginationQuarter <- str_sub(uni_data$LoanOriginationQuarter, 1,2)
 # add a new column called 'OriginationYear' by extracting the year string values
 # from the 'LoanOriginationDate' var
-uni_data$OriginationYear <- str_extract(uni_data$LoanOriginationQuarter, "\\d{4}$")
+uni_data$OriginationYear <- str_extract(uni_data$LoanOriginationQuarter,
+                                        "\\d{4}$")
 ```
 
 
@@ -439,7 +443,15 @@ Added a new column called 'LoanCode' to the data frame uni_data that correctly r
 typeof(uni_data$LoanCategory)
 # created new column: LoanCode, replacing the integers values with strings so that
 # plots containing this var will have meaningful lables
-uni_data$LoanCode <- mapvalues(as.factor(uni_data$LoanCategory), from = c("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"), to = c("Not Available","Debt Consolidation","Home Improvement","Business","Personal Loan","Student Use","Auto","Other","Baby Adoption","Boat","Cosmetic Procedure","Engagement Ring","Green Loans","Household Expenses","Large Purchases","Medical / Dental","Motorcycle","RV", "Taxes ","Vacation","Wedding Loans"), warn_missing =TRUE)
+uni_data$LoanCode <- mapvalues(as.factor(uni_data$LoanCategory),
+            from = c("0","1","2","3","4","5","6","7","8","9","10","11","12",
+                     "13","14","15","16","17","18","19","20"),
+            to = c("Not-Available","Debt-Consolidation","Home-Improvement",
+                   "Business","Personal-Loan","Student Use","Auto","Other",
+                   "Baby-Adoption","Boat","Cosmetic-Procedure",
+                   "Engagement-Ring","Green Loans","Household-Expenses",
+                   "Large Purchases","Medical-/-Dental","Motorcycle","RV",
+                   "Taxes ","Vacation","Wedding Loans"), warn_missing =TRUE)
 # summary(uni_data$LoanCode)
 ```
 
@@ -540,7 +552,10 @@ a <- ggplot(uni_data, aes(uni_data$CreditScoreMean)) +
 geom_histogram(bins = 20, color = "black", fill = "orange") +
     # adding the verticle line showing the location of the 'CreditScoreMean' var
     # indicating line type, line color and line size
-geom_vline(aes(xintercept = CreditScore_mu), linetype = "dashed", color = 'darkred', size = 0.4)
+geom_vline(aes(xintercept = CreditScore_mu),
+                            linetype = "dashed",
+                            color = 'darkred',
+                            size = 0.4)
 a
 #
 # remove the plot to clean up the workspace
@@ -1232,7 +1247,10 @@ set.seed(20182019)
 multi_data_samp <- sample(multi_data, 110000, replace = T)
 # modifying the data sample above to drop rows of bad income range values and 
 # enable ordering the income range plot values in ascending order
-multi_data_samp_f <- filter(multi_data_samp, multi_data_samp$IncomeRange_ordered == c('$0','$1-24,999',"$25,000-49,999","$50,000-74,999","$75,000-99,999","$100,000+"))
+multi_data_samp_f <- filter(multi_data_samp,
+                            multi_data_samp$IncomeRange_ordered ==
+                            c('$0','$1-24,999',"$25,000-49,999",
+                              "$50,000-74,999", "$75,000-99,999","$100,000+"))
 # generating a mulitvariate plot of 'CurrentDelinquencies' and 'LoanCode' 
 # using the 'IncomeRange_ordered' as a differentaitor with color
 sp <- qplot(CurrentDelinquencies,
@@ -1253,8 +1271,9 @@ Using 'IncomeRange_ordered' with color to stratify the current payment delinquen
 It appears that the number of current delinquencies is fairly evenly distributed among the various income range groupings. 
 
 ```{r,multivariate_Plot_e}
-# generating a mulitvariate plot of 'DebtToIncomeRatio' and 'CurrentDelinquencies' 
-# using the 'IncomeRange_ordered' as a differentaitor with color
+# generating a mulitvariate plot of 'DebtToIncomeRatio' and 
+# 'CurrentDelinquencies' using the 'IncomeRange_ordered' as a differentaitor
+#  with color
 sp <- qplot(DebtToIncomeRatio,
             CurrentDelinquencies,
             data = multi_data_samp_f,
@@ -1290,7 +1309,9 @@ rm(sp)
 #
 ```
 
-Multivariate_Plot_g, compares 'BorrowerAPR' along the x axis with 'DebtToIncomeRatio' along the y axis. 
+Multivariate_Plot_g, compares 'BorrowerAPR' along the x axis with 'DebtToIncomeRatio' along the y axis.
+
+To obatain a better visualization the upper 1% of values (outliers) were removed by subsetting the current data.
 
 From this plot we can confirm that the mean 'BorrowerARR' is roughly .22 and that the mean DTI is roughly .28. 
 
@@ -1302,11 +1323,13 @@ We can also see that the distribution of each varaible potted against the other 
 # using the 'Term' as a differentiator with color
 sp <- qplot(DebtToIncomeRatio,
             cut(BorrowerAPR,5),
-            data = multi_data_samp_f,
+            data = subset(multi_data_samp_f,
+            # subsetting column values removing outliers
+            DebtToIncomeRatio < quantile(DebtToIncomeRatio,0.99,na.rm = TRUE)),
             color = cut(BorrowerAPR,5),
             alpha = I(0.2)) +
-    geom_jitter(position=position_jitter(width = 0.5))
-    # scale_x_continuous(trans = "log10") +
+    geom_jitter(position=position_jitter(width = 0))
+    # scale_x_continuous(trans = "log")
     # scale_y_continuous(trans = "log10")
 sp
 rm(sp)
@@ -1347,11 +1370,11 @@ By having peers involved in the loan process the on time re payments increase.
 # using the 'CreditScoreMean' as a differentiator with color
 sp <- qplot(CurrentDelinquencies,
             FriendsAmountInvested,
-            data = multi_data_samp_f,
-            color = factor(cut(CreditScoreMean,4)),
-            alpha = I(0.2)) +
-    xlim(NA, 40)
-    # ylim(450,800)
+            data = multi_data_samp,
+            color = cut(CreditScoreMean,4),
+            alpha = I(0.5)) +
+    # scale_x_continuous(trans = "log")
+    scale_y_continuous(trans = "log")
 sp
 rm(sp)
 #
@@ -1366,7 +1389,7 @@ The frequency in 'FreindsAmountInvested' values appear to show no difference in 
 # using the 'HomeMortgage' as a differentiator with color
 sp <- qplot(CreditScoreMean,
             FriendsAmountInvested,
-            data = multi_data_samp_f,
+            data = multi_data_samp,
             color = HomeMortgage,
             alpha = I(0.2)) +
     geom_jitter(position=position_jitter(0.2)) +
@@ -1382,7 +1405,7 @@ From this plot we can visually see that the borrowers without a home mortgage ap
 
 This is evidenced by the green points coalescing on the left along the y axis and the red points gravitating toward the right side along the y axis. 
 
-```{r,multivariate_Plot_k,fig.width=9,fig.height=20}
+```{r,multivariate_Plot_k,fig.width=15,fig.height=20}
 # generating a mulitvariate plot of 'CurrentDelinquencies' and 'Occupation' 
 # using the 'HomeMortgage' as a differentiator with color
 sp <- qplot(CurrentDelinquencies,
@@ -1420,7 +1443,7 @@ cat('Model R-squared value = ', a)
 ```
 
 ```{r,cleanup_vars}
-rm(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10)
+rm(f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11)
 ```
 
 <br><br><br><br>
@@ -1479,7 +1502,8 @@ sp <- qplot(CreditScoreMean,
             alpha = I(0.2)) +
 guides(color=guide_legend(override.aes = list(alpha = 1))) +
 stat_smooth(method='lm',se=FALSE) +
-    labs(x = 'Credit Score Mean (rating)', y = 'Current Delinquencies (counts)') +
+    labs(x = 'Credit Score Mean (rating)',
+         y = 'Current Delinquencies (counts)') +
     ggtitle("Credit Score Mean vs Current Delinquencies")
 sp
 rm(sp)
@@ -1512,7 +1536,8 @@ sp <- qplot(CurrentDelinquencies,
             data = multi_data_samp_f,
             alpha = I(0.2)) +
     guides(color=guide_legend(override.aes = list(alpha = 1))) +
-    labs(x = 'Current Delinquencies (counts)', y = 'Income Range ($)', color = 'Mean Credit Score') +
+    labs(x = 'Current Delinquencies (counts)',
+         y = 'Income Range ($)', color = 'Mean Credit Score') +
     ggtitle('Current Delinquencies vs Income Range, by Mean Credit Score')
 
 sp
@@ -1545,7 +1570,8 @@ sp <- qplot(CurrentDelinquencies,
             data = multi_data_samp_f,
             alpha = I(0.2)) +
     guides(color=guide_legend(override.aes = list(alpha = 1))) +
-    labs(x = 'Current Delinquencies (counts)', y = 'Income Category (categorical)', color = 'Mean Credit Score') +
+    labs(x = 'Current Delinquencies (counts)',
+         y = 'Income Category (categorical)', color = 'Mean Credit Score') +
     ggtitle('Current Delinquencies vs Lone Category, by Mean Credit Score')
 sp
 rm(sp)
@@ -1650,7 +1676,6 @@ Possible improvements for this project would incorporate model predictions and p
 - [lubridate](https://rawgit.com/rstudio/cheatsheets/master/lubridate.pdf)
 
 - [STHDA](http://www.sthda.com/english/wiki/ggally-r-package-extension-to-ggplot2-for-correlation-matrix-and-survival-plots-r-software-and-data-visualization)
-
 
 - [R documentation](https://www.rdocumentation.org/packages/base/versions/3.5.2/topics/cut)
 
